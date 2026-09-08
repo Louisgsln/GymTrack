@@ -4,12 +4,14 @@ Application mobile Training + Nutrition. Le [cahier des charges](<Prompt maître
 
 ## Démarrer
 
-Node 24 LTS, npm et un appareil Android/iOS avec une version Expo Go compatible SDK 55, ou un development build.
+Node 24 LTS, npm et un appareil Android/iOS avec une version Expo Go compatible SDK 57, ou un development build reconstruit pour ce SDK. Le projet utilise Expo 57.0.21, React Native 0.86.3 et React 19.2.3 dans son lockfile.
 
 ```sh
 npm ci
 npm start
 ```
+
+Pour ouvrir explicitement Expo Go : `npm run go -- --clear`, puis scanner le QR code depuis le téléphone sur le même réseau. Installer la version compatible depuis [expo.dev/go](https://expo.dev/go), en sélectionnant SDK 57 et la plateforme. La version des stores peut différer : suivre les instructions Expo pour Android ou iOS, notamment `eas go`/TestFlight si nécessaire sur iPhone. Le SDK 57 requiert iOS 16.4 ou supérieur. Voir le [guide de compatibilité Expo Go](https://docs.expo.dev/troubleshooting/expo-go-version-mismatch/).
 
 Le mode local ne nécessite aucun compte ni clé. Créer une séance, créer un exercice personnel, l’ajouter, saisir et valider les séries, terminer puis consulter l’historique. Today permet les ajouts nutritionnels manuels. Aucun aliment ou résultat d’IA fictif n’est injecté.
 

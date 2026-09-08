@@ -6,7 +6,13 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   platforms: ['ios', 'android'],
-  plugins: ['expo-router', 'expo-sqlite', 'expo-secure-store'],
+  plugins: [
+    'expo-router',
+    'expo-sqlite',
+    'expo-secure-store',
+    'expo-localization',
+    'expo-status-bar',
+  ],
   ios: { bundleIdentifier: 'app.gymtrack.mobile', supportsTablet: true },
   android: { package: 'app.gymtrack.mobile' },
 };

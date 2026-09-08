@@ -411,6 +411,10 @@ La section §32 est livrée. Les programmes regroupent des occurrences ordonnée
 
 94 tests passent dans 13 fichiers. Les sections globales Training et base de données restent partielles ; les programmes ne livrent pas la planification calendaire ou la progression automatique.
 
+## Maintenance — compatibilité Expo Go SDK 57 — 2026-09-08
+
+Socle migré de SDK 55 vers 56 puis 57, avec React Native 0.86.3 et dépendances natives alignées. 94 tests, TypeScript, lint, formatage, 21 contrôles Expo Doctor et exports Hermes Android/iOS validés. Commande `npm run go` ajoutée. Aucun statut fonctionnel supplémentaire n’est déclaré terminé par cette migration ; l’exécution sur téléphone reste non vérifiée. Voir [TESTING.md](TESTING.md).
+
 ## Critères contractuels exhaustifs
 
 ### 0. RÈGLE ABSOLUE : PARITÉ FONCTIONNELLE, PAS COPIE PROPRIÉTAIRE

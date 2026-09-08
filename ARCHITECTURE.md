@@ -36,6 +36,8 @@ Lot 5 : `RoutineFolderService` fournit une lecture transactionnelle dossiers/rou
 
 Lot 6 : `ProgramService` gère les programmes et leurs occurrences ordonnées de routines. La duplication conserve les références aux modèles ; le démarrage appelle le service de snapshot dans la même transaction. La suppression d’une routine retire aussi ses occurrences. Les lectures et écritures restent locales, avec outbox atomique et contrôles de propriétaire.
 
+Migration du 2026-09-08 : socle Expo SDK 57, React Native 0.86.3, React 19.2.3 et TypeScript 6.0.3. Les plugins de localisation et de barre de statut sont déclarés explicitement. Reanimated et Worklets sont alignés sur les versions natives Expo Go ; le renderer des tests suit la version de React. Aucun changement de schéma SQLite ou de données utilisateur pour cette migration.
+
 ## Références techniques
 
 - [Installation Expo Router](https://docs.expo.dev/router/installation/)

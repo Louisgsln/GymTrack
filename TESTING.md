@@ -96,3 +96,11 @@ Formatage, ESLint et TypeScript passent. Les exports Hermes Android (1302 module
 - `tests/postgres.test.ts` : cinquième migration et outbox réelle, références répétées, copies et tombstones, idempotence, FK propriétaire, isolation RLS et écritures directes interdites.
 
 Les exports Hermes Android (1307 modules) et iOS (1283 modules) sont générés. Les hôtes natifs des tests UI restent simulés ; aucun test sur téléphone ou serveur Supabase réel n’est déclaré réalisé. Aucune dépendance supplémentaire pour ce lot.
+
+## Compatibilité Expo Go SDK 57 — 2026-09-08
+
+Migration incrémentale SDK 55 → 56 → 57. Expo 57.0.21, React Native 0.86.3, React/renderer 19.2.3 et TypeScript 6.0.3 sont installés. Les versions natives Reanimated 4.5.1 et Worklets 0.10.1 sont explicites pour éviter les versions transitives incompatibles avec Expo Go.
+
+Les 94 tests dans 13 fichiers et TypeScript passent après chaque étape. Sur SDK 57, `npm run check` passe (formatage, ESLint, TypeScript, tests), Expo Doctor valide 21/21 contrôles et les exports Hermes Android (1488 modules) et iOS (1353 modules) réussissent. `npm ls --depth=0` ne signale aucune dépendance invalide. L’installation npm signale encore 3 vulnérabilités modérées transitives ; aucune correction majeure forcée n’a été appliquée.
+
+La configuration déclare les plugins de localisation et de barre de statut. `npm run go` sélectionne explicitement Expo Go. Le serveur Metro a été démarré sur localhost, son manifeste annonce GYMTRACK et `sdkVersion: 57.0.0`, puis le serveur de vérification a été arrêté. Les schémas SQLite et les migrations métier sont inchangés. L’exécution réelle sur téléphone et les builds APK/IPA restent à vérifier.
