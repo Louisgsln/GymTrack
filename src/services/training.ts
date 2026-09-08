@@ -9,25 +9,40 @@ import {
 } from '../types/entities';
 import { DomainError } from '../utils/errors';
 import { summarizeSets } from '../features/training/calculations';
+import { buildPerformance } from '../features/training/performance';
+import { completedRound } from '../features/training/supersets';
+import { assertPermutation } from '../features/routines/model';
 
 export class TrainingService {
   constructor(private readonly repo: EntityRepository) {}
   async state() {
-    const workouts = await this.repo.list('workouts');
-    const exercises = await this.repo.list('exercises');
-    const workoutExercises = await this.repo.list('workout_exercises');
-    const sets = (await this.repo.list('workout_sets')).filter(
-      (s) => !s.deletedAt,
-    );
-    return {
-      active: workouts.find((w) => w.status === 'ACTIVE') ?? null,
-      history: workouts
-        .filter((w) => w.status === 'FINISHED')
-        .sort((a, b) => b.startedAt.localeCompare(a.startedAt)),
-      exercises,
-      workoutExercises,
-      sets,
-    };
+    return this.repo.db.transaction(async (tx) => {
+      const workouts = await this.repo.list('workouts', tx);
+      const exercises = await this.repo.list('exercises', tx);
+      const workoutExercises = await this.repo.list('workout_exercises', tx);
+      const sets = (await this.repo.list('workout_sets', tx)).filter(
+        (s) => !s.deletedAt,
+      );
+      const groups = (await this.repo.list('superset_groups', tx)).filter(
+        (g) => g.workoutId && !g.deletedAt,
+      );
+      return {
+        active: workouts.find((w) => w.status === 'ACTIVE') ?? null,
+        history: workouts
+          .filter((w) => w.status === 'FINISHED')
+          .sort((a, b) => b.startedAt.localeCompare(a.startedAt)),
+        exercises,
+        workoutExercises,
+        sets,
+        groups,
+        performance: buildPerformance({
+          workouts,
+          exercises,
+          workoutExercises,
+          sets,
+        }),
+      };
+    });
   }
   private async active(id: string, tx: SqlConnection): Promise<Workout> {
     const workout = await this.repo.get('workouts', id, tx);
@@ -94,6 +109,7 @@ export class TrainingService {
           position: existing.length,
           notes: '',
           supersetGroupId: null,
+          restSeconds: null,
         },
         tx,
       );
@@ -102,6 +118,16 @@ export class TrainingService {
     });
   }
   private async newSet(workoutExerciseId: string, tx: SqlConnection) {
+    const item = await this.repo.get(
+      'workout_exercises',
+      workoutExerciseId,
+      tx,
+    );
+    if (item.supersetGroupId) {
+      const workout = await this.active(item.workoutId, tx);
+      if (workout.restEndsAt)
+        await this.repo.save('workouts', { ...workout, restEndsAt: null }, tx);
+    }
     const sets = (await this.repo.list('workout_sets', tx)).filter(
       (s) => s.workoutExerciseId === workoutExerciseId && !s.deletedAt,
     );
@@ -117,8 +143,8 @@ export class TrainingService {
         reps: previous?.reps ?? 0,
         rpe: null,
         rir: null,
-        durationSeconds: null,
-        distanceMeters: null,
+        durationSeconds: previous?.durationSeconds ?? null,
+        distanceMeters: previous?.distanceMeters ?? null,
         completedAt: null,
         deletedAt: null,
       },
@@ -165,6 +191,14 @@ export class TrainingService {
       return this.repo.save('workout_sets', next, tx);
     });
   }
+  editExercise(id: string, notes: string) {
+    z.string().max(5000).parse(notes);
+    return this.repo.db.transaction(async (tx) => {
+      const item = await this.repo.get('workout_exercises', id, tx);
+      await this.active(item.workoutId, tx);
+      return this.repo.save('workout_exercises', { ...item, notes }, tx);
+    });
+  }
   private async validateCompleted(
     set: WorkoutSet,
     exerciseId: string,
@@ -206,16 +240,36 @@ export class TrainingService {
       );
       if (complete) {
         const exercise = await this.repo.get('exercises', item.exerciseId, tx);
+        let restSeconds = item.restSeconds ?? exercise.defaultRestSeconds;
+        if (item.supersetGroupId) {
+          const group = await this.repo.get(
+            'superset_groups',
+            item.supersetGroupId,
+            tx,
+          );
+          const members = (
+            await this.repo.list('workout_exercises', tx)
+          ).filter(
+            (e) => e.workoutId === workout.id && e.supersetGroupId === group.id,
+          );
+          const sets = await this.repo.list('workout_sets', tx);
+          restSeconds = completedRound(next, members, sets)
+            ? group.restSeconds
+            : 0;
+        }
         await this.repo.save(
           'workouts',
           {
             ...workout,
-            restEndsAt: new Date(
-              Date.parse(now) + exercise.defaultRestSeconds * 1000,
-            ).toISOString(),
+            restEndsAt:
+              restSeconds > 0
+                ? new Date(Date.parse(now) + restSeconds * 1000).toISOString()
+                : null,
           },
           tx,
         );
+      } else if (item.supersetGroupId && workout.restEndsAt) {
+        await this.repo.save('workouts', { ...workout, restEndsAt: null }, tx);
       }
       return next;
     });
@@ -263,6 +317,38 @@ export class TrainingService {
         { ...set, deletedAt: this.repo.runtime.now() },
         tx,
       );
+      if (item.supersetGroupId) {
+        const workout = await this.active(item.workoutId, tx);
+        if (workout.restEndsAt)
+          await this.repo.save(
+            'workouts',
+            { ...workout, restEndsAt: null },
+            tx,
+          );
+      }
+    });
+  }
+  reorderSets(workoutExerciseId: string, ids: string[]) {
+    return this.repo.db.transaction(async (tx) => {
+      const item = await this.repo.get(
+        'workout_exercises',
+        workoutExerciseId,
+        tx,
+      );
+      const workout = await this.active(item.workoutId, tx);
+      const sets = (await this.repo.list('workout_sets', tx)).filter(
+        (s) => s.workoutExerciseId === item.id && !s.deletedAt,
+      );
+      assertPermutation(ids, sets);
+      for (const set of sets)
+        if (set.position !== ids.indexOf(set.id))
+          await this.repo.save(
+            'workout_sets',
+            { ...set, position: ids.indexOf(set.id) },
+            tx,
+          );
+      if (item.supersetGroupId && workout.restEndsAt)
+        await this.repo.save('workouts', { ...workout, restEndsAt: null }, tx);
     });
   }
   editWorkout(id: string, input: unknown) {

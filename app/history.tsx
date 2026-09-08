@@ -4,6 +4,9 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { useTraining } from '../src/hooks/useTraining';
 import { fromKg, summarizeSets } from '../src/features/training/calculations';
 import { usePreferences } from '../src/store/preferences';
+import { HistoryRoutineActions } from '../src/features/routines/HistoryRoutineActions';
+import { WorkoutRecords } from '../src/features/training/PerformanceView';
+import { groupLabels } from '../src/features/training/supersets';
 export default function History() {
   const t = useTranslation();
   const { data, isError, refetch } = useTraining();
@@ -58,14 +61,25 @@ export default function History() {
                 {selected === workout.id && (
                   <>
                     <Label>{workout.notes}</Label>
+                    <HistoryRoutineActions workout={workout} />
+                    <WorkoutRecords
+                      records={
+                        data.performance.recordsByWorkoutId[workout.id] ?? []
+                      }
+                      exercises={data.exercises}
+                    />
                     {items.map((item) => (
                       <Card key={item.id}>
                         <Label>
+                          {groupLabels(items)[item.id]
+                            ? `${groupLabels(items)[item.id]} · `
+                            : ''}
                           {
                             data.exercises.find((e) => e.id === item.exerciseId)
                               ?.name
                           }
                         </Label>
+                        <Label muted>{item.notes}</Label>
                         {sets
                           .filter(
                             (s) =>

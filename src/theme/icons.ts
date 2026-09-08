@@ -1,4 +1,5 @@
 export const icons = {
+  plan: '▦',
   today: '◉',
   train: '↗',
   history: '≡',

@@ -30,3 +30,69 @@ CI fournie dans `.github/workflows/ci.yml` ; son exécution hébergée n’a pas
 - `xcode → uuid 11.1.1` est ciblé sur l’API v4 CommonJS, conservée.
 
 Prettier format check et `expo install --check` passent. L’arbre npm ne contient aucun conflit de dépendances directes. Le smoke test du générateur UUID xcode passe avec l’override.
+
+## Lot 2 — routines, 2026-09-06
+
+43 tests passent dans 9 fichiers, dont 19 nouveaux tests :
+
+- Migration réelle SQLite v1 → v2 avec séance active et outbox conservées ; ouverture répétée des migrations.
+- Création/édition/duplication/suppression de routines, réordonnancement complet des trois niveaux, permutations invalides, accès entre propriétaires, validation des valeurs.
+- Fermeture/réouverture d’un fichier, démarrage atomique, impossibilité d’écraser la séance active, copies indépendantes, notes/repos/cibles conservés et rollback complet des créations/imports/suppressions en cas d’erreur.
+- Conversion historique → routine et répétition/copie de séance ; remise à zéro des validations ; cibles de durée/distance.
+- Partage JSON versionné sans IDs de compte/historique, validation stricte, copie indépendante et rejet des versions/contenus invalides.
+- React : création/édition/démarrage à travers l’écran, revue avant partage/import, confirmation avant suppression et premier rendu/modification sans réseau. Les services, repositories, hooks et SQLite sont réels ; les hôtes React Native, navigation et feuille de partage sont des doubles de test. Ces vérifications ne sont pas des E2E sur téléphone.
+- PostgreSQL embarqué : chaîne des deux migrations appliquée ; envoi de la queue routines → séance → suppressions ; conservation des références, RLS et refus des écritures directes.
+
+TypeScript, ESLint et compatibilité Expo passent. Les bundles Hermes Android/iOS ont été générés avec les nouveaux écrans. Les dépendances de tests restent hors du bundle applicatif. L’installation npm signale toujours les 8 alertes modérées transitives déjà documentées au lot 1.
+
+La feuille de partage native entre applications, le cycle de vie sur appareil et la connexion réelle à Supabase restent non vérifiés faute d’environnement accessible/configuré.
+
+## Lot 3 — performances et PR, 2026-09-06
+
+54 tests dans 10 fichiers, dont 11 nouveaux :
+
+- `tests/performance.test.ts` : cinq métriques par exercice, cumul des occurrences, égalités et tolérance flottante, formule injectable, filtres de type/échauffement, correction/dévalidation/suppression/abandon, rang des séries et occurrences, trous non validés, séance pertinente et exclusion des séances ultérieures.
+- Reconstruction chronologique indépendante de l’ordre des lignes ; correction des records suivants après changement d’une donnée source. Réouverture d’un vrai fichier SQLite, queue inchangée après lecture et isolation des propriétaires.
+- `tests/routines-ui.test.tsx` couvre désormais aussi les écrans Training/History : rendu à froid hors ligne, valeurs précédentes, kg/lb sans écriture, validation et dévalidation des records provisoires, confirmation de clôture, records historiques et première référence.
+
+Les tests UI utilisent les vrais composants/hooks/services/SQLite avec des hôtes React Native simulés. Ils ne certifient pas le rendu visuel ou l’accessibilité sur téléphone. Aucun test cloud ou mobile natif supplémentaire n’est prétendu. Les 277 sections contractuelles restent contrôlées par le test de matrice.
+
+Formatage, ESLint et TypeScript passent. Les exports Hermes Android (1293 modules) et iOS (1269 modules) sont générés ; l’exécution du compilateur local a nécessité de sortir du sandbox Windows. Aucune dépendance supplémentaire pour ce lot.
+
+## Lot 4 — supersets, 2026-09-06
+
+68 tests passent dans 11 fichiers, dont 14 nouveaux :
+
+- `tests/supersets.test.ts` : tailles 2/3/4+, ordre par tour et séries inégales, minuteur uniquement en fin de tour, dévalidation, réorganisation des blocs/membres/séries, refus des permutations incorrectes et des groupes séparés.
+- Propriétaires/parents, modifications d’une séance fermée, copies avec UUID indépendants dans les deux directions, format partagé v2, import v1 et rejet des groupes invalides.
+- Rollback groupe/membres/outbox, copie groupée annulée sur panne de série, groupe source incohérent refusé, suppression d’un membre de routine sans altérer la séance source, reprise d’un fichier réel et migration v2 → v3 sans réécriture des anciennes données/queue.
+- `tests/postgres.test.ts` : troisième migration, outbox réelle avec création, changement de repos, copies, suppression de routine et tombstones de groupes ; idempotence, contrainte de repos, références au mauvais parent, isolation RLS et écritures directes interdites.
+- `tests/routines-ui.test.tsx` : tri-set créé hors ligne à travers l’écran, mode guidé A1 → A2 → A3 → A1, repos après le tour, confirmation avant dissociation ; groupe de routine et démarrage indépendant.
+
+Les hôtes natifs restent simulés dans les tests UI. Les tests sur téléphone, notifications OS et raccordement Supabase réel ne sont pas déclarés réalisés. Aucun ajout de dépendance pour ce lot.
+
+Formatage, ESLint et TypeScript passent sans erreur ni avertissement de lint. Les exports Hermes Android (1297 modules) et iOS (1267 modules) sont générés avec les commandes de groupe et le mode guidé.
+
+## Lot 5 — dossiers de routines, 2026-09-06
+
+82 tests passent dans 12 fichiers, dont 14 nouveaux :
+
+- `tests/routine-folders.test.ts` : classement par dossier, insertion avant une routine, suppression avec conservation des graphes/séances, duplication dans le dossier source, imports/conversions sans dossier, références étrangères et ancrages périmés refusés, rollback, déplacements concurrents et réouverture sans écriture supplémentaire.
+- Migration d’une vraie base v3 contenant un payload sans `folderId` et son opération en attente ; données inchangées et lecture compatible après v4. Résolution des zones de dépôt et annulation des cibles invalides.
+- `tests/routines-ui.test.tsx` : gestes natifs grant/move/release/terminate jusqu’au service SQLite, déplacement entre dossiers et insertion, réorganisation de dossiers hors ligne, annulation sans outbox, parcours par boutons, création/renommage/suppression confirmée et dossier sélectionné conservé après édition.
+- `tests/postgres.test.ts` : quatrième migration et outbox réelle, déplacements puis tombstone, séance conservée, répétition idempotente, mauvais propriétaire refusé par FK, lecture RLS et écriture directe interdite.
+
+Les mesures et hôtes React Native sont simulés dans les tests d’interface. Le geste physique, les lecteurs d’écran et le défilement natif restent non vérifiés sur appareil. Le drag vise les éléments visibles ; les boutons permettent d’atteindre les dossiers hors écran. Aucune dépendance supplémentaire pour ce lot.
+
+Formatage, ESLint et TypeScript passent. Les exports Hermes Android (1302 modules) et iOS (1278 modules) sont générés avec l’organisation des dossiers.
+
+## Lot 6 — programmes, 2026-09-08
+
+94 tests passent dans 13 fichiers, dont 12 nouveaux :
+
+- `tests/programs.test.ts` : composition avec routines répétées, ordre, édition, duplication avec références partagées, snapshots indépendants, suppression des liens, refus des mauvais propriétaires et permutations invalides.
+- Rollback des copies/suppressions/démarrages, garde contre les routines vides et démarrages concurrents, réouverture SQLite et migration v4 → v5 conservant les anciennes lignes et opérations en attente.
+- `tests/routines-ui.test.tsx` : parcours hors ligne création/édition/composition/réorganisation/démarrage/duplication/suppression, champs invalides et routine vide sans création de séance.
+- `tests/postgres.test.ts` : cinquième migration et outbox réelle, références répétées, copies et tombstones, idempotence, FK propriétaire, isolation RLS et écritures directes interdites.
+
+Les exports Hermes Android (1307 modules) et iOS (1283 modules) sont générés. Les hôtes natifs des tests UI restent simulés ; aucun test sur téléphone ou serveur Supabase réel n’est déclaré réalisé. Aucune dépendance supplémentaire pour ce lot.

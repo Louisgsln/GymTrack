@@ -5,7 +5,8 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createLocalQueryClient } from './localQueryClient';
 import { getLocales } from 'expo-localization';
 import { bootstrap, type Services } from '../services/bootstrap';
 import { usePreferences } from '../store/preferences';
@@ -14,9 +15,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { Button, Label, Page } from '../components/ui';
 
 const Context = createContext<Services | null>(null);
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1 }, mutations: { retry: false } },
-});
+const queryClient = createLocalQueryClient();
 let initialization: ReturnType<typeof bootstrap> | null = null;
 function initialize() {
   initialization ??= bootstrap().catch((error: unknown) => {

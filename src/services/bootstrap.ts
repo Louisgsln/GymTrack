@@ -7,6 +7,12 @@ import { EntityRepository } from '../repositories/entities';
 import { TrainingService } from './training';
 import { NutritionService } from './nutrition';
 import { SettingsService } from './settings';
+import { RoutineService } from './routines';
+import { RoutineSharingService } from './routineSharing';
+import { WorkoutTemplateService } from './workoutTemplates';
+import { SupersetService } from './supersets';
+import { RoutineFolderService } from './routineFolders';
+import { ProgramService } from './programs';
 
 export async function bootstrap() {
   const sqlite = await openDatabaseAsync('gymtrack.db');
@@ -34,7 +40,13 @@ export async function bootstrap() {
     const settings = new SettingsService(db);
     return {
       training: new TrainingService(repo),
+      supersets: new SupersetService(repo),
+      routineFolders: new RoutineFolderService(repo),
+      programs: new ProgramService(repo),
       nutrition: new NutritionService(repo),
+      routines: new RoutineService(repo),
+      routineSharing: new RoutineSharingService(repo),
+      workoutTemplates: new WorkoutTemplateService(repo),
       settings,
       preferences: await settings.load(),
     };

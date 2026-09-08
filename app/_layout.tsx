@@ -25,6 +25,7 @@ function Navigation() {
           [
             { name: 'index', key: 'today' },
             { name: 'train', key: 'train' },
+            { name: 'plan', key: 'plan' },
             { name: 'history', key: 'history' },
             { name: 'profile', key: 'profile' },
           ] as const

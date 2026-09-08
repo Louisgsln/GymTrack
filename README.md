@@ -13,9 +13,19 @@ npm start
 
 Le mode local ne nécessite aucun compte ni clé. Créer une séance, créer un exercice personnel, l’ajouter, saisir et valider les séries, terminer puis consulter l’historique. Today permet les ajouts nutritionnels manuels. Aucun aliment ou résultat d’IA fictif n’est injecté.
 
+Planifier permet de créer/éditer des routines, réordonner leurs exercices/séries, les dupliquer et les démarrer. Depuis l’historique, une séance peut être répétée, copiée ou enregistrée comme routine. Le partage JSON passe par une prévisualisation ; le contenu reçu s’importe après confirmation. Voir [ROUTINES.md](ROUTINES.md).
+
+La séance active affiche les performances précédentes et les records provisoires par exercice. Les records acquis sont consultables dans le détail de l’historique. Les comparaisons fonctionnent hors ligne et respectent le choix kg/lb ; voir [TRAINING_CALCULATIONS.md](TRAINING_CALCULATIONS.md) pour les règles de pertinence et les cinq métriques.
+
 `npm run android` ouvre un émulateur Android configuré. `npm run ios` nécessite macOS/Xcode. L’application mobile n’expose pas encore de cible web ; le companion Next.js est prévu séparément.
 
+Supersets, tri-sets et giant sets sont disponibles dans « Organiser les exercices », pour les routines et séances actives. Le mode guidé suit les tours et le minuteur attend leur complétion. Les groupes restent indépendants lors des copies et imports. Voir [SUPERSETS.md](SUPERSETS.md).
+
+Planifier permet aussi de créer des dossiers et de déplacer les routines par glisser-déposer ou avec les boutons. Supprimer un dossier conserve ses routines dans Sans dossier. Voir [ROUTINE_FOLDERS.md](ROUTINE_FOLDERS.md).
+
 ## Environnement et backend
+
+Planifier → Programmes regroupe des routines dans un ordre choisi, avec répétition possible. Les programmes peuvent être édités, dupliqués et supprimés ; démarrer une occurrence crée une séance indépendante. Voir [PROGRAMS.md](PROGRAMS.md).
 
 Copier `.env.example` vers `.env` uniquement pour préparer Supabase. Les variables `EXPO_PUBLIC_SUPABASE_URL` et `EXPO_PUBLIC_SUPABASE_ANON_KEY` sont publiques ; aucune clé service-role ou fournisseur ne doit être placée dans l’app.
 

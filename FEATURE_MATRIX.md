@@ -26,7 +26,7 @@ Dépôt sans code : seul le cahier des charges existe. Aucun package, écran, as
 | 11  | Compte et Today             | ONBOARDING GLOBAL                                             | NOT_STARTED |
 | 12  | Compte et Today             | DASHBOARD TODAY                                               | IN_PROGRESS |
 | 13  | Training                    | MOTEUR D'ENTRAÎNEMENT                                         | IN_PROGRESS |
-| 14  | Training                    | DÉMARRAGE WORKOUT                                             | IN_PROGRESS |
+| 14  | Training                    | DÉMARRAGE WORKOUT                                             | DONE        |
 | 15  | Training                    | EXERCISE DATABASE                                             | IN_PROGRESS |
 | 16  | Training                    | MUSCLES                                                       | IN_PROGRESS |
 | 17  | Training                    | ÉQUIPEMENTS                                                   | IN_PROGRESS |
@@ -34,17 +34,17 @@ Dépôt sans code : seul le cahier des charges existe. Aucun package, écran, as
 | 19  | Training                    | EXERCISE PICKER                                               | IN_PROGRESS |
 | 20  | Training                    | SÉRIES                                                        | IN_PROGRESS |
 | 21  | Training                    | TYPES DE SÉRIES                                               | IN_PROGRESS |
-| 22  | Training                    | SET OPERATIONS                                                | IN_PROGRESS |
+| 22  | Training                    | SET OPERATIONS                                                | DONE        |
 | 23  | Training                    | RPE / RIR                                                     | IN_PROGRESS |
-| 24  | Training                    | SUPERSETS                                                     | NOT_STARTED |
+| 24  | Training                    | SUPERSETS                                                     | DONE        |
 | 25  | Training                    | REST TIMER                                                    | IN_PROGRESS |
-| 26  | Training                    | NOTES WORKOUT                                                 | IN_PROGRESS |
-| 27  | Training                    | PREVIOUS PERFORMANCE                                          | NOT_STARTED |
-| 28  | Training                    | PERSONAL RECORDS                                              | IN_PROGRESS |
+| 26  | Training                    | NOTES WORKOUT                                                 | DONE        |
+| 27  | Training                    | PREVIOUS PERFORMANCE                                          | DONE        |
+| 28  | Training                    | PERSONAL RECORDS                                              | DONE        |
 | 29  | Training                    | WORKOUT SUMMARY                                               | IN_PROGRESS |
-| 30  | Training                    | ROUTINES                                                      | NOT_STARTED |
-| 31  | Training                    | DOSSIERS DE ROUTINES                                          | NOT_STARTED |
-| 32  | Training                    | PROGRAMMES                                                    | NOT_STARTED |
+| 30  | Training                    | ROUTINES                                                      | DONE        |
+| 31  | Training                    | DOSSIERS DE ROUTINES                                          | DONE        |
+| 32  | Training                    | PROGRAMMES                                                    | DONE        |
 | 33  | Training                    | WORKOUT HISTORY                                               | IN_PROGRESS |
 | 34  | Training                    | WORKOUT STATISTICS                                            | NOT_STARTED |
 | 35  | Training                    | MUSCLE STATISTICS                                             | NOT_STARTED |
@@ -292,6 +292,8 @@ Dépôt sans code : seul le cahier des charges existe. Aucun package, écran, as
 
 ## Lot 1 — preuves et limites
 
+État historique au 2026-09-05 ; les changements suivants sont consignés dans le lot 2.
+
 Statuts de sous-fonctions uniquement : TESTED signifie vérification métier/intégration ci-dessous, pas validation native de toute la section. Les sections composites restent IN_PROGRESS tant que tous leurs critères ne sont pas livrés.
 
 | Sous-fonction                                                                     | Statut      | Preuve / limite                                                                           |
@@ -318,6 +320,96 @@ Statuts de sous-fonctions uniquement : TESTED signifie vérification métier/int
 | Synchronisation bidirectionnelle, conflits interactifs, migration du propriétaire | NOT_STARTED | L’outbox reste locale ; aucun succès cloud simulé                                         |
 | Routines, supersets, PR, performances précédentes                                 | NOT_STARTED | Prochaine tranche Training après identité/sync                                            |
 | CI GitHub Actions                                                                 | DONE        | Workflow créé, contrôles locaux exécutés ; run hébergé non observé                        |
+
+## Lot 2 — routines et réutilisation des séances — 2026-09-06
+
+État historique avant le lot 3 ; consulter le lot suivant pour les performances et les PR.
+
+Les sections 14, 26 et 30 passent à DONE : leurs parcours locaux sont implémentés. Les preuves automatisées ci-dessous ne remplacent pas une validation native sur appareil. La section 33 reste IN_PROGRESS : la conversion historique → routine est livrée, mais calendrier, filtres avancés, PR, médias et partage de workout restent à réaliser. Les 277 sections contractuelles sont conservées intégralement.
+
+| Sous-fonction                                                   | Statut  | Preuve / limite                                                                                                                                          |
+| --------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Créer, modifier, dupliquer et supprimer une routine             | TESTED  | tests/routines.test.ts et tests/routines-ui.test.tsx ; confirmation avant suppression                                                                    |
+| Réordonner routines, exercices et séries                        | TESTED  | Permutations complètes validées ; boutons monter/descendre accessibles ; dossiers et drag-and-drop §31 non livrés                                        |
+| Démarrer une routine hors ligne                                 | TESTED  | Copie indépendante notes/repos/cibles, garde de séance active, réouverture SQLite et rollback intégral                                                   |
+| Répéter/copier une séance terminée et enregistrer comme routine | TESTED  | Nouveaux UUID, complétions remises à zéro, historique source inchangé ; supersets refusés explicitement tant que §24 absent                              |
+| Notes de séance, exercice de séance et exercice de routine      | TESTED  | Persistance et indépendance entre modèle et séance ; notes visibles dans l’historique                                                                    |
+| Cibles poids/reps, durée/distance, RPE/RIR et types de séries   | TESTED  | Parseur commun avec la séance active ; unités canoniques ; test de démarrage/validation durée-distance                                                   |
+| Export/import portable de routines                              | TESTED  | JSON versionné sans identifiants personnels ; prévisualisation sans écriture ; confirmation avant import et appel Share ; validation stricte et rollback |
+| Partage natif vers une autre application                        | BLOCKED | Appel Share et annulation testés avec doublure ; réception effective à vérifier sur téléphone                                                            |
+| Migration SQLite v1 → v2 et nouvelles tables PostgreSQL         | TESTED  | Base existante préservée ; outbox locale appliquée dans PostgreSQL embarqué, RLS/FK et tombstones contrôlés                                              |
+| Lectures SQLite avec l’appareil déclaré hors ligne              | TESTED  | Fabrique TanStack Query en networkMode always ; chargement à froid et modification via le véritable écran Plan                                           |
+| Authentification et synchronisation cloud réelle                | BLOCKED | Configuration Supabase absente ; raccordement app, identité et synchronisation bidirectionnelle encore à réaliser                                        |
+| Validation globale du lot                                       | TESTED  | 43 tests dans 9 fichiers ; format, ESLint, TypeScript, compatibilité Expo et exports Hermes Android/iOS                                                  |
+
+Documentation détaillée : [ROUTINES.md](ROUTINES.md), [TESTING.md](TESTING.md), [ROADMAP.md](ROADMAP.md). Dossiers, programmes, performances précédentes et détection PR restent dans leurs statuts antérieurs. L’onglet Plan héberge ici les routines ; le meal planner §113 n’est pas implémenté.
+
+## Lot 3 — performances précédentes et PR — 2026-09-06
+
+Les sections 27 et 28 passent à DONE pour les parcours locaux implémentés. §29 et §33 restent IN_PROGRESS : les records sont visibles dans le détail d’historique, mais le bilan complet, médias, calendrier et filtres restent à réaliser. Les tables matérialisées et agrégats des sections 168/234 ne sont pas certifiés par cette projection locale.
+
+| Sous-fonction                                                   | Statut  | Preuve / limite                                                                                                                                        |
+| --------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Précédente performance avant chaque série                       | TESTED  | Identité d’exercice, occurrence, type et rang ; exclusion des séances abandonnées/ultérieures, gestion des trous et états vides                        |
+| Charge, reps, RPE et unités d’affichage                         | TESTED  | Parcours Training réel sous hôtes React Native simulés, bascule kg/lb sans écriture SQLite                                                             |
+| Cinq PR par exercice                                            | TESTED  | Maximum charge/reps/volume de série/1RM estimé/volume d’exercice dans une séance ; formule Epley injectable, première référence, égalités et tolérance |
+| Recalcul après correction, dévalidation, suppression ou abandon | TESTED  | Projection pure des sources SQLite ; records actifs provisoires et reconstruction des records historiques suivants                                     |
+| Affichage des records dans l’historique                         | TESTED  | Parcours UI validation → dévalidation → clôture confirmée → détail History                                                                             |
+| Reprise hors ligne et isolation                                 | TESTED  | Réouverture SQLite, propriétaire isolé et absence d’écriture outbox lors des lectures ; chargement UI hors ligne                                       |
+| Validation native et cloud                                      | BLOCKED | Aucun téléphone/émulateur accessible ; configuration Supabase toujours absente                                                                         |
+
+54 tests dans 10 fichiers. Les règles exactes, y compris les métriques applicables aux différents types d’exercice, sont documentées dans [TRAINING_CALCULATIONS.md](TRAINING_CALCULATIONS.md). Les records de charge ne traitent jamais l’assistance comme un poids soulevé et n’inventent pas de masse corporelle. Les critères originaux ci-dessous restent intacts.
+
+## Lot 4 — supersets et réorganisation — 2026-09-06
+
+Les sections 22 et 24 passent à DONE pour les parcours locaux. Les séries se réordonnent dans la séance active ; superset, tri-set et giant set possèdent un modèle durable, des repères, un parcours guidé et un repos par tour. §25 reste IN_PROGRESS : notifications et validation du cycle de vie sur appareil ne sont pas livrées. §168 reste partiel malgré l’ajout de `superset_groups`.
+
+| Sous-fonction                                                 | Statut  | Preuve / limite                                                                                                                              |
+| ------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Groupe durable avec parent routine ou séance                  | TESTED  | SQLite v3, propriétaire/parent exclusif, création et dissociation atomiques, refus des membres invalides                                     |
+| Superset / tri-set / giant set, repères A1/A2/A3              | TESTED  | Groupes de 2/3/4+ membres ; commandes d’interface et fonctions de navigation                                                                 |
+| Réorganisation blocs, membres et séries                       | TESTED  | Permutations complètes, groupes contigus et positions persistées ; boutons accessibles sans dépendance de drag-and-drop                      |
+| Mode guidé et repos de fin de tour                            | TESTED  | A1 → A2 → A3 → A1, séries en nombres inégaux, dévalidation et reprise d’une base fichier                                                     |
+| Routines, copies de séance et partages conservent les groupes | TESTED  | Nouveaux UUID, repos indépendant ; format v2 prévisualisé et validé ; import v1 sans groupes conservé                                        |
+| Résistance aux pannes de copies/modifications                 | TESTED  | Graphe et outbox annulés ensemble ; sources incohérentes refusées sans perte silencieuse de groupe                                           |
+| Extension PostgreSQL/RPC/RLS                                  | TESTED  | Troisième migration et outbox réelle jusqu’aux copies/tombstones ; contrainte parent/propriétaire, idempotence et absence d’écriture directe |
+| Contrôle global                                               | TESTED  | 68 tests, 11 fichiers ; TypeScript, ESLint et formatage                                                                                      |
+| Validation native et cloud réelle                             | BLOCKED | Téléphone/émulateur et instance Supabase non vérifiés ; notification de repos toujours absente                                               |
+
+Voir [SUPERSETS.md](SUPERSETS.md), [TESTING.md](TESTING.md) et [ROADMAP.md](ROADMAP.md). Les critères originaux des 277 sections restent intacts. Les mentions de supersets futurs/refusés dans le journal des lots précédents décrivent leur état historique ; le lot 4 les remplace.
+
+## Lot 5 — dossiers de routines — 2026-09-06
+
+La section 31 passe à DONE : `RoutineFolder`, classement et glisser-déposer sont implémentés localement. Les programmes §32 restent NOT_STARTED. Les mentions de dossiers futurs dans les lots précédents décrivent leur état historique ; les 277 sections contractuelles restent intactes.
+
+| Sous-fonction                                                 | Statut  | Preuve / limite                                                                                                                                       |
+| ------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Créer, renommer et classer les dossiers                       | TESTED  | Service SQLite transactionnel, ordre persistant et formulaire réel                                                                                    |
+| Déplacer/insérer les routines dans un dossier ou Sans dossier | TESTED  | Positions par dossier, ancrage par UUID, permutations complètes et concurrence sérialisée                                                             |
+| Glisser-déposer et commandes équivalentes                     | TESTED  | Événements grant/move/release/terminate dans le composant réel ; géométrie native simulée, annulations sans écriture ; boutons pour cibles hors écran |
+| Suppression de dossier sans perte                             | TESTED  | Confirmation UI, routines ajoutées à la racine, graphes et séances conservés, rollback sur panne                                                      |
+| Bibliothèque filtrée et retour de l’éditeur                   | TESTED  | Création dans le dossier courant et sélection conservée entre écrans                                                                                  |
+| Migration et reprise hors ligne                               | TESTED  | SQLite v4, ancienne ligne sans folderId et outbox conservées ; réouverture fichier, isolation du propriétaire                                         |
+| PostgreSQL / RPC / RLS                                        | TESTED  | Quatrième migration, vraie outbox jusqu’au tombstone, FK composite et idempotence                                                                     |
+| Vérification native/cloud                                     | BLOCKED | Mesures/gestes physiques et serveur Supabase réel non vérifiés ; protocole testé en PostgreSQL embarqué                                               |
+
+82 tests dans 12 fichiers ; détails dans [ROUTINE_FOLDERS.md](ROUTINE_FOLDERS.md) et [TESTING.md](TESTING.md). La duplication conserve le dossier source ; les imports et conversions depuis l’historique sont rangés dans Sans dossier. Le partage ne transmet pas l’organisation privée des dossiers.
+
+## Lot 6 — programmes — 2026-09-08
+
+La section §32 est livrée. Les programmes regroupent des occurrences ordonnées de routines, avec répétition possible. Voir [PROGRAMS.md](PROGRAMS.md).
+
+| Fonction                                                | Statut  | Preuve / limite                                                                                                   |
+| ------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| Composition, édition, ordre, duplication et suppression | TESTED  | Références partagées aux routines, UUID distincts des occurrences et copies                                       |
+| Démarrage d’une occurrence                              | TESTED  | Snapshot indépendant avec groupes, refus des routines vides et d’un second workout actif                          |
+| Suppression de routine ou programme                     | TESTED  | Liens retirés atomiquement ; routines conservées lors de la suppression du programme, séances toujours conservées |
+| Persistance locale et reprise                           | TESTED  | SQLite v5, upgrade v4 sans réécriture des payloads/queues, rollback et réouverture                                |
+| PostgreSQL / RPC / RLS                                  | TESTED  | Cinquième migration, outbox réelle, idempotence, FK propriétaire et écritures directes interdites                 |
+| Interface hors ligne                                    | TESTED  | Création, édition, composition, démarrage, duplication et suppression avec hôtes natifs simulés                   |
+| Vérification native/cloud                               | BLOCKED | Exécution sur téléphone et serveur Supabase réel non vérifiés                                                     |
+
+94 tests passent dans 13 fichiers. Les sections globales Training et base de données restent partielles ; les programmes ne livrent pas la planification calendaire ou la progression automatique.
 
 ## Critères contractuels exhaustifs
 
@@ -892,7 +984,7 @@ La séance doit survivre à :
 
 ### 14. DÉMARRAGE WORKOUT
 
-Statut : IN_PROGRESS
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1125,7 +1217,7 @@ CUSTOM
 
 ### 22. SET OPERATIONS
 
-Statut : IN_PROGRESS
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1175,7 +1267,7 @@ OFF
 
 ### 24. SUPERSETS
 
-Statut : NOT_STARTED
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1229,7 +1321,7 @@ Fonctionnement en background.
 
 ### 26. NOTES WORKOUT
 
-Statut : IN_PROGRESS
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1246,7 +1338,7 @@ Historiser correctement.
 
 ### 27. PREVIOUS PERFORMANCE
 
-Statut : NOT_STARTED
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1265,7 +1357,7 @@ L'historique doit prendre en compte les unités correctement.
 
 ### 28. PERSONAL RECORDS
 
-Statut : IN_PROGRESS
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1319,7 +1411,7 @@ avant sauvegarde finale.
 
 ### 30. ROUTINES
 
-Statut : NOT_STARTED
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1344,7 +1436,7 @@ start
 
 ### 31. DOSSIERS DE ROUTINES
 
-Statut : NOT_STARTED
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>
@@ -1365,7 +1457,7 @@ Drag & drop.
 
 ### 32. PROGRAMMES
 
-Statut : NOT_STARTED
+Statut : DONE
 
 <details>
 <summary>Critères originaux intégraux</summary>

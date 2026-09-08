@@ -4,6 +4,7 @@ import { useTraining } from '../src/hooks/useTraining';
 import { useAction } from '../src/hooks/useAction';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { ActiveWorkout } from '../src/features/training/ActiveWorkout';
+import { router } from 'expo-router';
 export default function Train() {
   const t = useTranslation();
   const { data, training, isError, refetch } = useTraining();
@@ -33,6 +34,11 @@ export default function Train() {
         <>
           <Label large>{t('train')}</Label>
           <Label muted>{t('emptyTraining')}</Label>
+          <Button
+            title={t('routines')}
+            secondary
+            onPress={() => router.navigate('/plan')}
+          />
           <Card>
             <Field
               label={t('workoutTitle')}

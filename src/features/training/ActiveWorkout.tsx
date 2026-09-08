@@ -9,6 +9,10 @@ import type { Workout } from '../../types/entities';
 import { remainingSeconds, summarizeSets, fromKg } from './calculations';
 import { SetRow } from './SetRow';
 import { ExercisePicker } from './ExercisePicker';
+import { PreviousSet, WorkoutRecords } from './PerformanceView';
+import { GroupEditor } from './GroupEditor';
+import { circuitSequence, groupLabels } from './supersets';
+import { ReorderButtons } from '../../components/ReorderButtons';
 
 type TrainingState = Awaited<ReturnType<TrainingService['state']>>;
 export function ActiveWorkout({
@@ -23,6 +27,7 @@ export function ActiveWorkout({
   const t = useTranslation();
   const { run, retry, pending, error } = useAction();
   const [picker, setPicker] = useState(false);
+  const [guided, setGuided] = useState(false);
   const [invalidRows, setInvalidRows] = useState<Record<string, boolean>>({});
   const [now, setNow] = useState(new Date().toISOString());
   const unit = usePreferences((s) => s.weightUnit);
@@ -35,6 +40,11 @@ export function ActiveWorkout({
     .filter((e) => e.workoutId === workout.id)
     .sort((a, b) => a.position - b.position);
   const itemIds = new Set(items.map((e) => e.id));
+  const labels = groupLabels(items);
+  const nextSet = circuitSequence(items, data.sets).find(
+    (set) => !set.completedAt,
+  );
+  const nextItem = items.find((item) => item.id === nextSet?.workoutExerciseId);
   const summary = summarizeSets(
     data.sets.filter((set) => itemIds.has(set.workoutExerciseId)),
   );
@@ -120,30 +130,102 @@ export function ActiveWorkout({
           <Label muted>{t('timerNote')}</Label>
         </Card>
       )}
-      {items.map((item) => (
-        <Card key={item.id}>
-          <Label large>
-            {data.exercises.find((e) => e.id === item.exerciseId)?.name}
-          </Label>
-          {data.sets
-            .filter((s) => s.workoutExerciseId === item.id)
-            .sort((a, b) => a.position - b.position)
-            .map((set, index) => (
-              <SetRow
-                key={`${set.id}-${unit}-${effort}`}
-                {...{ set, index, training, run, pending, onValidity }}
-              />
-            ))}
+      <GroupEditor
+        parent={{ workoutId: workout.id }}
+        items={items.map((item) => ({
+          ...item,
+          name:
+            data.exercises.find((e) => e.id === item.exerciseId)?.name ?? '',
+        }))}
+        groups={data.groups.filter((g) => g.workoutId === workout.id)}
+        {...{ run, pending }}
+      />
+      {nextItem && (
+        <Card>
+          <Label>{`${t('nextExercise')} · ${labels[nextItem.id] ?? ''} ${data.exercises.find((e) => e.id === nextItem.exerciseId)?.name} · ${t('set')} ${
+            data.sets
+              .filter((s) => s.workoutExerciseId === nextItem.id)
+              .sort((a, b) => a.position - b.position)
+              .findIndex((s) => s.id === nextSet?.id) + 1
+          }`}</Label>
           <Button
-            title={t('addSet')}
             secondary
-            disabled={pending}
-            onPress={() => {
-              void run(() => training.addSet(item.id));
-            }}
+            title={t(guided ? 'showAllSets' : 'followCircuit')}
+            disabled={blocked || error}
+            onPress={() => setGuided((v) => !v)}
           />
         </Card>
-      ))}
+      )}
+      {items
+        .filter((item) => !guided || !nextItem || item.id === nextItem.id)
+        .map((item) => (
+          <Card key={item.id}>
+            <Label large>
+              {labels[item.id] ? `${labels[item.id]} · ` : ''}
+              {data.exercises.find((e) => e.id === item.exerciseId)?.name}
+            </Label>
+            <Field
+              label={t('exerciseNotes')}
+              defaultValue={item.notes}
+              multiline
+              maxLength={5000}
+              onChangeText={(notes) => {
+                void run(
+                  () => training.editExercise(item.id, notes),
+                  `${item.id}-notes`,
+                );
+              }}
+            />
+            {data.sets
+              .filter((s) => s.workoutExerciseId === item.id)
+              .sort((a, b) => a.position - b.position)
+              .map(
+                (set, index) =>
+                  (!guided || !nextSet || set.id === nextSet.id) && (
+                    <Card key={`${set.id}-${unit}-${effort}`}>
+                      <ReorderButtons
+                        ids={data.sets
+                          .filter((s) => s.workoutExerciseId === item.id)
+                          .sort((a, b) => a.position - b.position)
+                          .map((s) => s.id)}
+                        id={set.id}
+                        disabled={pending}
+                        onReorder={(ids) => {
+                          void run(() => training.reorderSets(item.id, ids));
+                        }}
+                      />
+                      <PreviousSet
+                        previous={data.performance.previousBySetId[set.id]}
+                        trackingType={
+                          data.exercises.find((e) => e.id === item.exerciseId)
+                            ?.trackingType ?? 'WEIGHT_REPS'
+                        }
+                      />
+                      <SetRow
+                        trackingType={
+                          data.exercises.find((e) => e.id === item.exerciseId)
+                            ?.trackingType ?? 'WEIGHT_REPS'
+                        }
+                        {...{ set, index, training, run, pending, onValidity }}
+                      />
+                    </Card>
+                  ),
+              )}
+            <Button
+              title={t('addSet')}
+              secondary
+              disabled={pending}
+              onPress={() => {
+                void run(() => training.addSet(item.id));
+              }}
+            />
+          </Card>
+        ))}
+      <WorkoutRecords
+        records={data.performance.recordsByWorkoutId[workout.id] ?? []}
+        exercises={data.exercises}
+        provisional
+      />
       <Button
         title={t('addExercise')}
         secondary
@@ -152,7 +234,7 @@ export function ActiveWorkout({
       {picker && (
         <ExercisePicker
           exercises={data.exercises}
-          workoutId={workout.id}
+          onAdd={(exerciseId) => training.addExercise(workout.id, exerciseId)}
           {...{ training, run, pending }}
         />
       )}

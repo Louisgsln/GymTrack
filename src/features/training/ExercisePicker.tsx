@@ -5,13 +5,13 @@ import type { Exercise } from '../../types/entities';
 import type { TrainingService } from '../../services/training';
 export function ExercisePicker({
   exercises,
-  workoutId,
+  onAdd,
   training,
   run,
   pending,
 }: {
   exercises: Exercise[];
-  workoutId: string;
+  onAdd: (exerciseId: string) => Promise<unknown>;
   training: TrainingService;
   run(action: () => Promise<unknown>): Promise<boolean>;
   pending: boolean;
@@ -39,7 +39,7 @@ export function ExercisePicker({
             secondary
             disabled={pending}
             onPress={() => {
-              void run(() => training.addExercise(workoutId, exercise.id));
+              void run(() => onAdd(exercise.id));
             }}
           />
         ))}

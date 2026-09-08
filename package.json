@@ -49,9 +49,11 @@
     "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
+    "@types/react-test-renderer": "19.1.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~55.0.1",
     "prettier": "^3.9.6",
+    "react-test-renderer": "19.2.0",
     "typescript": "^5.9.3",
     "vitest": "^5.0.0"
   }

@@ -1,4 +1,8 @@
 import type { Database } from './connection';
+import { routinesMigration } from './routinesMigration';
+import { supersetsMigration } from './supersetsMigration';
+import { foldersMigration } from './foldersMigration';
+import { programsMigration } from './programsMigration';
 
 export const migrations = [
   {
@@ -53,6 +57,10 @@ export const migrations = [
       CREATE INDEX sync_pending ON sync_queue(owner_id, status, next_attempt_at);
     `,
   },
+  routinesMigration,
+  supersetsMigration,
+  foldersMigration,
+  programsMigration,
 ] as const;
 
 export async function migrate(db: Database): Promise<void> {

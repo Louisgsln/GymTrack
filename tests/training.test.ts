@@ -61,7 +61,13 @@ describe('durable training on real SQLite', () => {
         Array.from({ length: 10 }, () => s.training.start('Session')),
       );
       expect(new Set(workouts.map((w) => w.id)).size).toBe(1);
-      expect(await s.db.all('SELECT * FROM schema_migrations')).toHaveLength(1);
+      expect(await s.db.all('SELECT * FROM schema_migrations')).toEqual([
+        { version: 1 },
+        { version: 2 },
+        { version: 3 },
+        { version: 4 },
+        { version: 5 },
+      ]);
     } finally {
       s.close();
     }

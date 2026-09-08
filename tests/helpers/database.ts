@@ -10,6 +10,12 @@ import { migrate } from '../../src/database/migrations';
 import { EntityRepository } from '../../src/repositories/entities';
 import { TrainingService } from '../../src/services/training';
 import { NutritionService } from '../../src/services/nutrition';
+import { RoutineService } from '../../src/services/routines';
+import { RoutineSharingService } from '../../src/services/routineSharing';
+import { WorkoutTemplateService } from '../../src/services/workoutTemplates';
+import { SupersetService } from '../../src/services/supersets';
+import { RoutineFolderService } from '../../src/services/routineFolders';
+import { ProgramService } from '../../src/services/programs';
 
 export function nodeDatabase(path = ':memory:') {
   const sqlite = new DatabaseSync(path);
@@ -57,7 +63,13 @@ export async function setup(path = ':memory:', ownerId = randomUUID()) {
     repo,
     clock,
     training: new TrainingService(repo),
+    supersets: new SupersetService(repo),
+    routineFolders: new RoutineFolderService(repo),
+    programs: new ProgramService(repo),
     nutrition: new NutritionService(repo),
+    routines: new RoutineService(repo),
+    routineSharing: new RoutineSharingService(repo),
+    workoutTemplates: new WorkoutTemplateService(repo),
   };
 }
 export const exerciseInput = {

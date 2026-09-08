@@ -6,7 +6,9 @@ export class DomainError extends Error {
       | 'WORKOUT_CLOSED'
       | 'INVALID_SET'
       | 'CONFIG_REQUIRED'
-      | 'CONFLICT',
+      | 'CONFLICT'
+      | 'WORKOUT_ACTIVE'
+      | 'EMPTY_ROUTINE',
   ) {
     super(code);
     this.name = 'DomainError';
